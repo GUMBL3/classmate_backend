@@ -6,6 +6,7 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: '50mb' })); // Pinadami ang limit para sa malaking Base64 Image!
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
