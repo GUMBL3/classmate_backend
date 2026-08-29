@@ -1,19 +1,14 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { GoogleGenAI } = require('@google/genai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
-
-// Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '50mb' })); // Pinadami ang limit para sa malaking Base64 Image!
 
-// Initialize ang Google Gen AI SDK gamit ang API key
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// POST Route para sa pag-generate ng Reviewer
 app.post('/api/generate', async (req, res) => {
   try {
     const { notes, image } = req.body;
@@ -22,8 +17,7 @@ app.post('/api/generate', async (req, res) => {
       return res.status(400).json({ error: 'Text notes or an image is required.' });
     }
 
-    // Gamitin ang Gemini multimodal model
-    const model = googleAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `You are Classmate AI, an expert study assistant.
 Generate a structured study reviewer from the provided input. 
@@ -36,7 +30,6 @@ User Notes: ${notes || 'Analyze the attached image and generate the reviewer.'}`
 
     let contents = [prompt];
 
-    // Kapag may image payload mula sa app
     if (image) {
       contents.push({
         inlineData: {
@@ -52,10 +45,13 @@ User Notes: ${notes || 'Analyze the attached image and generate the reviewer.'}`
 
     return res.json({ reviewerContent: text });
   } catch (error) {
-    console.error('Gemini Generation Error:', error);
-    return res.status(500).json({ error: 'Failed to generate reviewer content.' });
+    console.error('Gemini Error:', error);
+    return res.status(500).json({ error: error.message || 'Server Error' });
   }
 });
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(Server running on port ${PORT}));
 
 // Patakbuhin ang Server
 app.listen(PORT, () => {
