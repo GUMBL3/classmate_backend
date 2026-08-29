@@ -16,59 +16,44 @@ const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 // POST Route para sa pag-generate ng Reviewer
 app.post('/api/generate', async (req, res) => {
   try {
-    const { notes } = req.body;
+    const { notes, image } = req.body;
 
-    if (!notes || notes.trim() === '') {
-      return res.status(400).json({ error: 'Kailangan ng notes para mag-generate!' });
+    if (!notes && !image) {
+      return res.status(400).json({ error: 'Text notes or an image is required.' });
     }
 
-    // Isinulat na Prompt para pilitin ang AI na maglabas ng malinis na JSON format
-    const prompt = `
-      Ikaw si ClassmateAI, isang matalinong Filipino student tutor. 
-      Suriin ang mga sumusunod na lecture notes at gumawa ng:
-      1. Summary (3 hanggang 5 mahahalagang bullet points sa simpleng Taglish).
-      2. Flashcards (3 hanggang 5 Question & Answer pairs).
+    // Gamitin ang Gemini multimodal model
+    const model = googleAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
-      I-return ang eksaktong JSON structure na ito nang WALANG markdown formatting o extra text:
-      {
-        "summary": ["Point 1", "Point 2", "Point 3"],
-        "flashcards": [
-          { "question": "Tanong 1?", "answer": "Sagot 1" },
-          { "question": "Tanong 2?", "answer": "Sagot 2" }
-        ]
-      }
+    const prompt = `You are Classmate AI, an expert study assistant.
+Generate a structured study reviewer from the provided input. 
+Include:
+1. Summary Points
+2. Key Terms & Definitions
+3. 3-5 Practice Quiz Questions with Answers.
 
-      Ito ang lecture notes:
-      "${notes}"
-    `;
+User Notes: ${notes || 'Analyze the attached image and generate the reviewer.'}`;
 
-    // Tumawag sa Gemini API gamit ang gemini-2.5-flash model
-    const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
-      contents: prompt,
-    });
+    let contents = [prompt];
 
-    let rawText = response.text.trim();
-
-    // Linisin ang output sakaling maglagay ang AI ng markdown code blocks
-    if (rawText.startsWith('```json')) {
-      rawText = rawText.replace(/^```json/, '').replace(/```$/, '').trim();
-    } else if (rawText.startsWith('```')) {
-      rawText = rawText.replace(/^```/, '').replace(/```$/, '').trim();
+    // Kapag may image payload mula sa app
+    if (image) {
+      contents.push({
+        inlineData: {
+          data: image,
+          mimeType: 'image/jpeg',
+        },
+      });
     }
 
-    // I-parse ang malinis na string patungong totoong JSON object
-    const parsedData = JSON.parse(rawText);
+    const result = await model.generateContent(contents);
+    const response = await result.response;
+    const text = response.text();
 
-    // Ipadala sa Frontend
-    res.json(parsedData);
-
+    return res.json({ reviewerContent: text });
   } catch (error) {
-    console.error('Error sa Gemini API:', error);
-    res.status(500).json({ 
-      error: 'Nagkaroon ng problema sa pag-generate ng reviewer.',
-      details: error.message 
-    });
+    console.error('Gemini Generation Error:', error);
+    return res.status(500).json({ error: 'Failed to generate reviewer content.' });
   }
 });
 
