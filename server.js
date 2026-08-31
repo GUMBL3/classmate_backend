@@ -4,11 +4,15 @@ const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 const app = express();
+
+// Middlewares
 app.use(cors());
 app.use(express.json());
 
+// Initialize Gemini AI
 const ai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
+// API Route para sa Reviewer Generation
 app.post('/api/generate', async (req, res) => {
   try {
     const { notes } = req.body;
@@ -39,10 +43,8 @@ User Notes: ${notes}`;
   }
 });
 
+// Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(Server running on port ${PORT}));
-
-// Patakbuhin ang Server
 app.listen(PORT, () => {
-  console.log('🚀 ClassmateAI Backend Server running on http://localhost:${PORT}');
+  console.log(🚀 ClassmateAI Backend Server running on port ${PORT});
 });
