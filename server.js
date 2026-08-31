@@ -26,7 +26,9 @@ Return this exact structure:
   "summary": [
     "Summary point 1",
     "Summary point 2",
-    "Summary point 3"
+    "Summary point 3",
+    "Summary point 4",
+    "Summary point 5"
   ],
   "flashcards": [
     {
@@ -43,7 +45,7 @@ Return this exact structure:
 User Notes: ${notes}`;
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3.6-flash',
       contents: prompt,
       config: {
         responseMimeType: 'application/json', // Pilitin ang API na mag-return ng totoong JSON
