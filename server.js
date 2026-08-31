@@ -18,7 +18,7 @@ app.post('/api/generate', async (req, res) => {
       return res.status(400).json({ error: 'Text notes or an image is required.' });
     }
 
-    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `You are Classmate AI, an expert study assistant.
 Generate a structured study reviewer from the provided input. 
@@ -29,7 +29,7 @@ Include:
 
 User Notes: ${notes || 'Analyze the attached image and generate the reviewer.'}`;
 
-    let contents = [prompt];
+    let contents = [];
 
     if (image) {
       contents.push({
@@ -40,14 +40,16 @@ User Notes: ${notes || 'Analyze the attached image and generate the reviewer.'}`
       });
     }
 
+    contents.push(prompt);
+
     const result = await model.generateContent(contents);
     const response = await result.response;
     const text = response.text();
 
     return res.json({ reviewerContent: text });
   } catch (error) {
-    console.error('Gemini Error:', error);
-    return res.status(500).json({ error: error.message || 'Server Error' });
+    console.error('Gemini API Error Detail:', error);
+    return res.status(500).json({ error: error.message || 'Failed to generate reviewer content' });
   }
 });
 
