@@ -46,5 +46,5 @@ User Notes: ${notes}`;
 // Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(🚀 ClassmateAI Backend Server running on port ${PORT});
+  console.log(`🚀 ClassmateAI Backend Server running on port ${PORT}`);
 });
