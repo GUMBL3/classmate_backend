@@ -22,7 +22,7 @@ app.post('/api/generate', async (req, res) => {
     }
 
     // Ginagamit ang googleAI variable
-    const model = googleAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+    const model = googleAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
     const prompt = `You are Classmate AI, an expert study assistant.
 Generate a structured study reviewer from the provided text notes.
