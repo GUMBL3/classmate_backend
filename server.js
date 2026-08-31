@@ -4,15 +4,11 @@ const cors = require('cors');
 const { GoogleGenAI } = require('@google/genai');
 
 const app = express();
-
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Initialize GenAI SDK (kusa nitong babasahin ang GEMINI_API_KEY mula sa env)
 const ai = new GoogleGenAI();
 
-// API Route para sa Reviewer Generation
 app.post('/api/generate', async (req, res) => {
   try {
     const { notes } = req.body;
@@ -21,30 +17,51 @@ app.post('/api/generate', async (req, res) => {
       return res.status(400).json({ error: 'Text notes are required.' });
     }
 
+    // Prompt na nag-o-require ng Pure JSON
     const prompt = `You are Classmate AI, an expert study assistant.
-Generate a structured study reviewer from the provided text notes.
-Include:
-1. Summary Points
-2. Key Terms & Definitions
-3. 3-5 Practice Quiz Questions with Answers.
+Analyze the user notes and return ONLY a valid JSON object without markdown formatting or markdown code blocks (do not wrap in \`\`\`json).
+
+Return this exact structure:
+{
+  "summary": [
+    "Summary point 1",
+    "Summary point 2",
+    "Summary point 3"
+  ],
+  "flashcards": [
+    {
+      "question": "Question 1 here?",
+      "answer": "Answer 1 here"
+    },
+    {
+      "question": "Question 2 here?",
+      "answer": "Answer 2 here"
+    }
+  ]
+}
 
 User Notes: ${notes}`;
 
-    // Syntax para sa @google/genai package
     const response = await ai.models.generateContent({
-      model: 'gemini-3.6-flash',
+      model: 'gemini-2.5-flash',
       contents: prompt,
+      config: {
+        responseMimeType: 'application/json', // Pilitin ang API na mag-return ng totoong JSON
+      },
     });
 
-    return res.json({ reviewerContent: response.text });
+    // Clean-up response text bago i-parse
+    let rawText = response.text || '';
+    rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+
+    const parsedContent = JSON.parse(rawText);
+
+    return res.json({ reviewerContent: parsedContent });
   } catch (error) {
     console.error('Gemini Error:', error);
     return res.status(500).json({ error: error.message || 'Server Error' });
   }
 });
 
-// Start Server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`ClassmateAI Backend Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(`ClassmateAI Backend Server running on port ${PORT}`));
