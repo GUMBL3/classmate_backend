@@ -21,6 +21,7 @@ app.post('/api/generate', async (req, res) => {
       return res.status(400).json({ error: 'Text notes are required.' });
     }
 
+    // Ginagamit ang googleAI variable
     const model = googleAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `You are Classmate AI, an expert study assistant.
