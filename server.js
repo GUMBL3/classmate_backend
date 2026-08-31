@@ -1,7 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenAI } = require('@google/genai');
 
 const app = express();
 
@@ -9,8 +9,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Initialize Gemini AI
-const googleAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Initialize GenAI SDK (kusa nitong babasahin ang GEMINI_API_KEY mula sa env)
+const ai = new GoogleGenAI();
 
 // API Route para sa Reviewer Generation
 app.post('/api/generate', async (req, res) => {
@@ -21,9 +21,6 @@ app.post('/api/generate', async (req, res) => {
       return res.status(400).json({ error: 'Text notes are required.' });
     }
 
-    // Ginagamit ang googleAI variable
-    const model = googleAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
     const prompt = `You are Classmate AI, an expert study assistant.
 Generate a structured study reviewer from the provided text notes.
 Include:
@@ -33,13 +30,15 @@ Include:
 
 User Notes: ${notes}`;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    // Syntax para sa @google/genai package
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+    });
 
-    return res.json({ reviewerContent: text });
+    return res.json({ reviewerContent: response.text });
   } catch (error) {
-    console.error('Gemini Generation Error:', error);
+    console.error('Gemini Error:', error);
     return res.status(500).json({ error: error.message || 'Server Error' });
   }
 });
