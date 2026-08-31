@@ -21,7 +21,7 @@ app.post('/api/generate', async (req, res) => {
       return res.status(400).json({ error: 'Text notes are required.' });
     }
 
-    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
 
     const prompt = `You are Classmate AI, an expert study assistant.
 Generate a structured study reviewer from the provided text notes.
